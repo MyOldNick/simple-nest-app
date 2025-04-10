@@ -1,0 +1,75 @@
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { GetUserDto } from './dto/get-user.dto';
+import { plainToInstance } from 'class-transformer';
+import { comparePassword } from 'src/utils/hash-password.util';
+import { AuthDto } from '../auth/dto/auth-dto';
+
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+  ) {}
+
+  async create(user: CreateUserDto): Promise<GetUserDto> {
+    try {
+      const newUser = this.userRepository.create(user);
+      const createdUser = await this.userRepository.save(newUser);
+      return plainToInstance(GetUserDto, createdUser, {
+        excludeExtraneousValues: true,
+      });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new InternalServerErrorException('Failed to create user');
+    }
+  }
+
+  async findAll(): Promise<GetUserDto[]> {
+    try {
+      const users = await this.userRepository.find({
+        select: ['email', 'firstname', 'id', 'lastname'],
+      });
+      return plainToInstance(GetUserDto, users, {
+        excludeExtraneousValues: true,
+      });
+    } catch (error) {
+      console.error('Failed to get users', error);
+      throw new InternalServerErrorException('Failed to get users');
+    }
+  }
+
+  async validateUser({ email, password }: AuthDto): Promise<GetUserDto> {
+    try {
+      const user = await this.userRepository.findOne({ where: { email } });
+
+      if (!user) throw new UnauthorizedException('Invalid credentials');
+
+      if (!(await comparePassword(password, user.password)))
+        throw new UnauthorizedException();
+
+      return plainToInstance(GetUserDto, user);
+    } catch (error) {
+      console.error('Failed user validation', error);
+      throw new InternalServerErrorException('Failed user validation');
+    }
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} user`;
+  }
+
+  update(id: number) {
+    return `This action updates a #${id} user`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} user`;
+  }
+}
