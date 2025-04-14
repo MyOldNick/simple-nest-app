@@ -9,7 +9,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { GetUserDto } from './dto/get-user.dto';
 import { plainToInstance } from 'class-transformer';
-import { comparePassword } from 'src/utils/hash-password.util';
+import { comparePassword } from '@/utils/hash-password.util';
 import { AuthDto } from '../auth/dto/auth-dto';
 
 @Injectable()
@@ -26,6 +26,7 @@ export class UserService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       console.error('Error creating user:', error);
       throw new InternalServerErrorException('Failed to create user');
     }
@@ -40,6 +41,7 @@ export class UserService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       console.error('Failed to get users', error);
       throw new InternalServerErrorException('Failed to get users');
     }
@@ -54,8 +56,11 @@ export class UserService {
       if (!(await comparePassword(password, user.password)))
         throw new UnauthorizedException();
 
-      return plainToInstance(GetUserDto, user);
+      return plainToInstance(GetUserDto, user, {
+        excludeExtraneousValues: true,
+      });
     } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       console.error('Failed user validation', error);
       throw new InternalServerErrorException('Failed user validation');
     }

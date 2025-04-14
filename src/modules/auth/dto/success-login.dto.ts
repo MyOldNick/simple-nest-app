@@ -12,4 +12,14 @@ export class SuccessLoginDto {
   @IsString()
   @Expose()
   access_token: string;
+
+  @ApiProperty({
+    title: 'Refresh token',
+    description: 'refresh token',
+    example: 'lsakdjf23gklsdjflksdf',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @Expose()
+  refresh_token: string;
 }

@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
-import { JwtStrategy } from 'src/core/strategies/jwt.strategy';
+import { JwtStrategy } from '@/core/strategies/jwt.strategy';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), JwtModule, ConfigModule],

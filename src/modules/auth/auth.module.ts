@@ -10,6 +10,7 @@ import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([User]),
     PassportModule,
     JwtModule.registerAsync({

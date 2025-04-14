@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { hashPassword } from 'src/utils/hash-password.util';
+import { hashPassword } from '@/utils/hash-password.util';
 import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
