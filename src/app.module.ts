@@ -6,7 +6,13 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PostsModule } from './modules/posts/posts.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), PostgreModule, UserModule, AuthModule, PostsModule],
+  imports: [
+    ConfigModule.forRoot(),
+    PostgreModule,
+    UserModule,
+    AuthModule,
+    PostsModule,
+  ],
   controllers: [],
   providers: [],
 })

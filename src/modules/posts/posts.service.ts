@@ -26,7 +26,11 @@ export class PostsService {
     }
   }
 
-  async createPost({ author, title, content }: CreatePostDto): Promise<GetPostDto> {
+  async createPost({
+    author,
+    title,
+    content,
+  }: CreatePostDto): Promise<GetPostDto> {
     try {
       const foundUser = await this.userRepository.findOne({
         where: { id: author },

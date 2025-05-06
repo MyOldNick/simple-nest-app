@@ -5,7 +5,10 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { GetUserDto } from '../dto/get-user.dto';
-import { InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthDto } from '@/modules/auth/dto/auth-dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -23,9 +26,13 @@ describe('UserService', () => {
     hashPasswordBeforeInsert: jest.fn(),
   };
 
-  const createUserDto: CreateUserDto = plainToInstance(CreateUserDto, mockUser, {
-    excludeExtraneousValues: true,
-  });
+  const createUserDto: CreateUserDto = plainToInstance(
+    CreateUserDto,
+    mockUser,
+    {
+      excludeExtraneousValues: true,
+    },
+  );
 
   const getUserDto: GetUserDto = plainToInstance(GetUserDto, mockUser, {
     excludeExtraneousValues: true,
@@ -127,32 +134,32 @@ describe('UserService', () => {
       expect(result).toEqual(expectedUser);
     });
 
-    it("should throw an error if user not found", async () => {
-        userRepository.findOne.mockResolvedValue(null);
+    it('should throw an error if user not found', async () => {
+      userRepository.findOne.mockResolvedValue(null);
 
-        await expect(userService.validateUser(authDto)).rejects.toThrow(
-          InternalServerErrorException,
-        );
-    })
+      await expect(userService.validateUser(authDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
 
     it("should throw an error if password doesn't match", async () => {
-        userRepository.findOne.mockResolvedValue(mockUser);
+      userRepository.findOne.mockResolvedValue(mockUser);
 
-        jest
+      jest
         .spyOn(require('@/utils/hash-password.util'), 'comparePassword')
         .mockResolvedValue(false);
 
-        await expect(userService.validateUser(authDto)).rejects.toThrow(
-          InternalServerErrorException,
-        );
-    })
+      await expect(userService.validateUser(authDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
 
-    it("should throw an error if database error", () => {
-        userRepository.findOne.mockRejectedValue(new Error('Database error'));
+    it('should throw an error if database error', () => {
+      userRepository.findOne.mockRejectedValue(new Error('Database error'));
 
-        expect(userService.validateUser(authDto)).rejects.toThrow(
-            InternalServerErrorException,
-        );
-    })
+      expect(userService.validateUser(authDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
   });
 });
