@@ -28,8 +28,7 @@ export class CreatePostDto {
     description: 'Author id',
     example: '12321',
   })
-  @IsNotEmpty()
   @IsNumber()
   @Expose()
-  author: number;
+  author?: number;
 }
