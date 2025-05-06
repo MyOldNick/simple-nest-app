@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:generate": "npm run build && typeorm migration:generate -d dist/src/core/database/datasource.js src/core/database/migrations/$npm_config_name",
     "migration:run": "npm run build && typeorm migration:run -d dist/src/core/database/datasource.js",
-    "migration:revert": "npm run build && typeorm migration:revert -d dist/src/core/database/datasource.js"
+    "migration:revert": "npm run build && typeorm migration:revert -d dist/src/core/database/datasource.js",
+    "prepare": "husky"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
