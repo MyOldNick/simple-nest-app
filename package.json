@@ -21,7 +21,7 @@
     "migration:generate": "npm run build && typeorm migration:generate -d dist/src/core/database/datasource.js src/core/database/migrations/$npm_config_name",
     "migration:run": "npm run build && typeorm migration:run -d dist/src/core/database/datasource.js",
     "migration:revert": "npm run build && typeorm migration:revert -d dist/src/core/database/datasource.js",
-    "prepare": "husky"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
