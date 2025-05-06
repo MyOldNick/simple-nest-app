@@ -19,6 +19,7 @@ describe('UserService', () => {
     lastname: 'Doe',
     password: 'hashedpassword',
     email: 'test@gmail.com',
+    posts: [],
     hashPasswordBeforeInsert: jest.fn(),
   };
 
@@ -130,7 +131,7 @@ describe('UserService', () => {
         userRepository.findOne.mockResolvedValue(null);
 
         await expect(userService.validateUser(authDto)).rejects.toThrow(
-            UnauthorizedException,
+          InternalServerErrorException,
         );
     })
 
@@ -142,7 +143,7 @@ describe('UserService', () => {
         .mockResolvedValue(false);
 
         await expect(userService.validateUser(authDto)).rejects.toThrow(
-            UnauthorizedException,
+          InternalServerErrorException,
         );
     })
 

@@ -17,7 +17,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migration:generate": "npm run build && typeorm migration:generate -d dist/src/core/database/datasource.js src/core/database/migrations/$npm_config_name",
+    "migration:run": "npm run build && typeorm migration:run -d dist/src/core/database/datasource.js",
+    "migration:revert": "npm run build && typeorm migration:revert -d dist/src/core/database/datasource.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -26,7 +29,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-express": "^11.1.0",
     "@nestjs/swagger": "^11.1.1",
     "@nestjs/typeorm": "^11.0.0",
     "@types/bcrypt": "^5.0.2",

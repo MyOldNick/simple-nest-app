@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { hashPassword } from '@/utils/hash-password.util';
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Post } from '@/modules/posts/entities/post.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -30,6 +39,7 @@ export class User {
     example: 'StrOngPassWordd&&1F',
   })
   @Column({ type: 'varchar' })
+  @Exclude()
   password: string;
 
   @ApiProperty({
@@ -39,6 +49,15 @@ export class User {
   })
   @Column({ type: 'varchar', unique: true })
   email: string;
+
+  @ApiProperty({
+    title: 'Posts',
+    description: "user's posts",
+    example: "['post1', 'post2']",
+  })
+  @OneToMany(() => Post, (post) => post.author)
+  @JoinColumn()
+  posts?: Array<Post>;
 
   @BeforeInsert()
   async hashPasswordBeforeInsert() {

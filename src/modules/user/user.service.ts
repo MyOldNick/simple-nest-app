@@ -26,7 +26,6 @@ export class UserService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
       console.error('Error creating user:', error);
       throw new InternalServerErrorException('Failed to create user');
     }
@@ -41,7 +40,6 @@ export class UserService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
       console.error('Failed to get users', error);
       throw new InternalServerErrorException('Failed to get users');
     }
@@ -60,7 +58,6 @@ export class UserService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
-      if (error instanceof UnauthorizedException) throw error;
       console.error('Failed user validation', error);
       throw new InternalServerErrorException('Failed user validation');
     }
