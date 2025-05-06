@@ -10,7 +10,7 @@ export class GetPostDto extends OmitType(CreatePostDto, ["author"] as const) {
     @IsNotEmpty()
     id: number
     
-    @ApiProperty({ title: "Author", description: "Author of post", example: "{ name: 'Mark', id: 34323 }" })
+    @ApiProperty({ title: "Author", description: "Author of post", type: () => GetUserDto })
     @IsNotEmpty()
     @Type(() => GetUserDto)
     @Expose()
