@@ -59,6 +59,7 @@ describe('PostsService', () => {
             save: jest.fn(),
             find: jest.fn(),
             findOne: jest.fn(),
+            delete: jest.fn()
           },
         },
         {
@@ -68,6 +69,7 @@ describe('PostsService', () => {
             save: jest.fn(),
             find: jest.fn(),
             findOne: jest.fn(),
+            delete: jest.fn()
           },
         },
       ],
@@ -119,5 +121,40 @@ describe('PostsService', () => {
     await expect(postsService.getAllPosts()).rejects.toThrow(
       'Failed to get posts',
     );
+  });
+
+  describe('deletePost', () => {
+    it('should delete a post when user is the author', async () => {
+      postRepository.findOne.mockResolvedValue(mockPost);
+      postRepository.delete.mockResolvedValue({ affected: 1, raw: [] });
+
+      const result = await postsService.deletePost({ id: 1 }, mockUser.id);
+
+      expect(postRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: ['author'],
+      });
+      expect(postRepository.delete).toHaveBeenCalledWith({ id: 1 });
+      expect(result).toBe('Post deleted successfully');
+    });
+
+    it('should throw NotFoundException when post is not found', async () => {
+      postRepository.findOne.mockResolvedValue(null);
+
+      await expect(postsService.deletePost({ id: 999 }, mockUser.id)).rejects.toThrow('Post not found');
+    });
+
+    it('should throw ForbiddenException when user is not the author', async () => {
+      postRepository.findOne.mockResolvedValue(mockPost);
+
+      await expect(postsService.deletePost({ id: 1 }, 999)).rejects.toThrow('You are not allowed to delete this post');
+    });
+
+    it('should throw InternalServerErrorException when deletion fails', async () => {
+      postRepository.findOne.mockResolvedValue(mockPost);
+      postRepository.delete.mockRejectedValue(new Error('Database error'));
+
+      await expect(postsService.deletePost({ id: 1 }, mockUser.id)).rejects.toThrow('Failed to delete post');
+    });
   });
 });

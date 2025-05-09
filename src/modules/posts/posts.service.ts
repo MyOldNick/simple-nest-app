@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
@@ -6,6 +6,7 @@ import { GetPostDto } from './dto/get-post.dto';
 import { CreatePostDto } from './dto/create-post.dto';
 import { User } from '../user/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
+import { DeletePostDto } from './dto/delete-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -47,6 +48,35 @@ export class PostsService {
     } catch (error) {
       console.error('Failed to create post', error);
       throw new InternalServerErrorException('Failed to create post');
+    }
+  }
+
+
+  async deletePost({ id }: DeletePostDto, userId: number): Promise<string> {
+    try {
+      const post = await this.postRepository.findOne({ where: { id }, relations: ['author'] });
+
+      if (!post) {
+        throw new NotFoundException('Post not found');
+      }
+
+      if (post.author.id !== userId) {
+        throw new ForbiddenException('You are not allowed to delete this post');
+      }
+
+      const result = await this.postRepository.delete({ id });
+
+      if (result.affected === 0) {
+        throw new NotFoundException('Post not found');
+      }
+
+      return 'Post deleted successfully';
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
+        throw error;
+      }
+      console.error('Failed to delete post', error);
+      throw new InternalServerErrorException('Failed to delete post');
     }
   }
 }

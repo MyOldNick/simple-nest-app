@@ -37,6 +37,7 @@ describe('PostsController', () => {
           useValue: {
             getAllPosts: jest.fn(),
             createPost: jest.fn(),
+            deletePost: jest.fn(),
           },
         },
       ],
@@ -104,6 +105,32 @@ describe('PostsController', () => {
         ...createPostDto,
         author: 1,
       });
+    });
+  });
+
+  describe('deletePost', () => {
+    const deletePostDto = { id: 1 };
+    const mockRequest = { user: { userId: 1 } };
+
+    it('should delete a post', async () => {
+      const successMessage = 'Post deleted successfully';
+      jest.spyOn(postsService, 'deletePost').mockResolvedValue(successMessage);
+
+      const result = await postsController.deletePost(deletePostDto, mockRequest);
+
+      expect(postsService.deletePost).toHaveBeenCalledWith(deletePostDto, mockRequest.user.userId);
+      expect(result).toBe(successMessage);
+    });
+
+    it('should throw an error if service fails', async () => {
+      jest
+        .spyOn(postsService, 'deletePost')
+        .mockRejectedValue(new Error('Service error'));
+
+      await expect(
+        postsController.deletePost(deletePostDto, mockRequest),
+      ).rejects.toThrow('Service error');
+      expect(postsService.deletePost).toHaveBeenCalledWith(deletePostDto, mockRequest.user.userId);
     });
   });
 });
