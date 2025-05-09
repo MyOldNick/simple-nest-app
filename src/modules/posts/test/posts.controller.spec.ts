@@ -116,9 +116,15 @@ describe('PostsController', () => {
       const successMessage = 'Post deleted successfully';
       jest.spyOn(postsService, 'deletePost').mockResolvedValue(successMessage);
 
-      const result = await postsController.deletePost(deletePostDto, mockRequest);
+      const result = await postsController.deletePost(
+        deletePostDto,
+        mockRequest,
+      );
 
-      expect(postsService.deletePost).toHaveBeenCalledWith(deletePostDto, mockRequest.user.userId);
+      expect(postsService.deletePost).toHaveBeenCalledWith(
+        deletePostDto,
+        mockRequest.user.userId,
+      );
       expect(result).toBe(successMessage);
     });
 
@@ -130,7 +136,10 @@ describe('PostsController', () => {
       await expect(
         postsController.deletePost(deletePostDto, mockRequest),
       ).rejects.toThrow('Service error');
-      expect(postsService.deletePost).toHaveBeenCalledWith(deletePostDto, mockRequest.user.userId);
+      expect(postsService.deletePost).toHaveBeenCalledWith(
+        deletePostDto,
+        mockRequest.user.userId,
+      );
     });
   });
 });

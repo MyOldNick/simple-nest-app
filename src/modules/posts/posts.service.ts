@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Repository } from 'typeorm';
@@ -51,10 +56,12 @@ export class PostsService {
     }
   }
 
-
   async deletePost({ id }: DeletePostDto, userId: number): Promise<string> {
     try {
-      const post = await this.postRepository.findOne({ where: { id }, relations: ['author'] });
+      const post = await this.postRepository.findOne({
+        where: { id },
+        relations: ['author'],
+      });
 
       if (!post) {
         throw new NotFoundException('Post not found');
@@ -64,15 +71,14 @@ export class PostsService {
         throw new ForbiddenException('You are not allowed to delete this post');
       }
 
-      const result = await this.postRepository.delete({ id });
-
-      if (result.affected === 0) {
-        throw new NotFoundException('Post not found');
-      }
+      await this.postRepository.delete({ id });
 
       return 'Post deleted successfully';
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
         throw error;
       }
       console.error('Failed to delete post', error);
