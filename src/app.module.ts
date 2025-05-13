@@ -5,9 +5,17 @@ import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { FollowersModule } from './modules/followers/followers.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 5000,
+        limit: 10,
+      },
+    ]),
     ConfigModule.forRoot(),
     PostgreModule,
     UserModule,
@@ -16,6 +24,11 @@ import { FollowersModule } from './modules/followers/followers.module';
     FollowersModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
