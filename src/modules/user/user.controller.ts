@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { JwtAuthGuard } from '@/core/guards/auth.guard';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { PaginationDto } from '@/core/dto/pagination.dto';
 
 @Controller('user')
 export class UserController {
@@ -39,8 +41,8 @@ export class UserController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(): Promise<GetUserDto[]> {
-    return this.userService.findAll();
+  findAll(@Query() pagination: PaginationDto): Promise<GetUserDto[]> {
+    return this.userService.findAll(pagination);
   }
 
   @Get(':id')

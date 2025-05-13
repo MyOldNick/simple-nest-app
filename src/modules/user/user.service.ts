@@ -11,6 +11,7 @@ import { GetUserDto } from './dto/get-user.dto';
 import { plainToInstance } from 'class-transformer';
 import { comparePassword } from '@/utils/hash-password.util';
 import { AuthDto } from '../auth/dto/auth-dto';
+import { PaginationDto } from '@/core/dto/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -31,10 +32,12 @@ export class UserService {
     }
   }
 
-  async findAll(): Promise<GetUserDto[]> {
+  async findAll({ limit, offset }: PaginationDto): Promise<GetUserDto[]> {
     try {
-      const users = await this.userRepository.find({
+      const [users] = await this.userRepository.findAndCount({
         select: ['email', 'firstname', 'id', 'lastname'],
+        skip: offset,
+        take: limit,
       });
       return plainToInstance(GetUserDto, users, {
         excludeExtraneousValues: true,

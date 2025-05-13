@@ -6,6 +6,7 @@ import {
   Req,
   UseGuards,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '@/core/guards/auth.guard';
@@ -13,6 +14,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { GetPostDto } from './dto/get-post.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DeletePostDto } from './dto/delete-post.dto';
+import { PaginationDto } from '@/core/dto/pagination.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -27,8 +29,8 @@ export class PostsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   @Get()
-  getAllPosts(): Promise<GetPostDto[]> {
-    return this.postsService.getAllPosts();
+  getAllPosts(@Query() pagination: PaginationDto): Promise<GetPostDto[]> {
+    return this.postsService.getAllPosts(pagination);
   }
 
   @ApiOperation({ summary: 'Create post' })

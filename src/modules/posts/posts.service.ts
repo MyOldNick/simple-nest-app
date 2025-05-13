@@ -12,6 +12,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { User } from '../user/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { DeletePostDto } from './dto/delete-post.dto';
+import { PaginationDto } from '@/core/dto/pagination.dto';
 
 @Injectable()
 export class PostsService {
@@ -20,9 +21,13 @@ export class PostsService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
-  async getAllPosts(): Promise<GetPostDto[]> {
+  async getAllPosts({ limit, offset }: PaginationDto): Promise<GetPostDto[]> {
     try {
-      const posts = await this.postRepository.find({ relations: ['author'] });
+      const [posts] = await this.postRepository.findAndCount({
+        relations: ['author'],
+        skip: offset,
+        take: limit,
+      });
       return plainToInstance(GetPostDto, posts, {
         excludeExtraneousValues: true,
       });

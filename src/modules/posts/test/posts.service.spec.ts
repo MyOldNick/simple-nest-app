@@ -12,6 +12,7 @@ import {
   ForbiddenException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { PaginationDto } from '@/core/dto/pagination.dto';
 
 describe('PostsService', () => {
   let postsService: PostsService;
@@ -53,6 +54,11 @@ describe('PostsService', () => {
     author: getUserDto,
   };
 
+  const mockPaginationDto: PaginationDto = {
+    limit: 10,
+    offset: 0,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -62,7 +68,7 @@ describe('PostsService', () => {
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
-            find: jest.fn(),
+            findAndCount: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
           },
@@ -118,6 +124,9 @@ describe('PostsService', () => {
       await expect(postsService.createPost(createPostDto)).rejects.toThrow(
         NotFoundException,
       );
+      await expect(postsService.createPost(createPostDto)).rejects.toThrow(
+        'User not found',
+      );
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { id: createPostDto.author },
       });
@@ -130,40 +139,54 @@ describe('PostsService', () => {
       await expect(postsService.createPost(createPostDto)).rejects.toThrow(
         InternalServerErrorException,
       );
+      await expect(postsService.createPost(createPostDto)).rejects.toThrow(
+        'Failed to create post',
+      );
     });
   });
 
   describe('getAllPosts', () => {
     it('should return all posts successfully', async () => {
-      postRepository.find.mockResolvedValue([mockPost]);
+      postRepository.findAndCount.mockResolvedValue([[mockPost], 1]);
 
-      const result = await postsService.getAllPosts();
+      const result = await postsService.getAllPosts(mockPaginationDto);
 
-      expect(postRepository.find).toHaveBeenCalledWith({
+      expect(postRepository.findAndCount).toHaveBeenCalledWith({
         relations: ['author'],
+        skip: mockPaginationDto.offset,
+        take: mockPaginationDto.limit,
       });
       expect(result).toEqual([expectedPostDto]);
     });
 
     it('should return empty array when no posts exist', async () => {
-      postRepository.find.mockResolvedValue([]);
+      postRepository.findAndCount.mockResolvedValue([[], 0]);
 
-      const result = await postsService.getAllPosts();
+      const result = await postsService.getAllPosts(mockPaginationDto);
 
-      expect(postRepository.find).toHaveBeenCalledWith({
+      expect(postRepository.findAndCount).toHaveBeenCalledWith({
         relations: ['author'],
+        skip: mockPaginationDto.offset,
+        take: mockPaginationDto.limit,
       });
       expect(result).toEqual([]);
     });
 
     it('should throw InternalServerErrorException when fetching posts fails', async () => {
-      postRepository.find.mockRejectedValue(new Error('Database error'));
+      postRepository.findAndCount.mockRejectedValue(
+        new Error('Database error'),
+      );
 
-      await expect(postsService.getAllPosts()).rejects.toThrow(
+      await expect(postsService.getAllPosts(mockPaginationDto)).rejects.toThrow(
         InternalServerErrorException,
       );
-      expect(postRepository.find).toHaveBeenCalledWith({
+      await expect(postsService.getAllPosts(mockPaginationDto)).rejects.toThrow(
+        'Failed to get posts',
+      );
+      expect(postRepository.findAndCount).toHaveBeenCalledWith({
         relations: ['author'],
+        skip: mockPaginationDto.offset,
+        take: mockPaginationDto.limit,
       });
     });
   });
@@ -189,6 +212,9 @@ describe('PostsService', () => {
       await expect(
         postsService.deletePost({ id: 999 }, mockUser.id),
       ).rejects.toThrow(NotFoundException);
+      await expect(
+        postsService.deletePost({ id: 999 }, mockUser.id),
+      ).rejects.toThrow('Post not found');
       expect(postRepository.findOne).toHaveBeenCalledWith({
         where: { id: 999 },
         relations: ['author'],
@@ -200,6 +226,9 @@ describe('PostsService', () => {
 
       await expect(postsService.deletePost({ id: 1 }, 999)).rejects.toThrow(
         ForbiddenException,
+      );
+      await expect(postsService.deletePost({ id: 1 }, 999)).rejects.toThrow(
+        'You are not allowed to delete this post',
       );
       expect(postRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
@@ -214,6 +243,9 @@ describe('PostsService', () => {
       await expect(
         postsService.deletePost({ id: 1 }, mockUser.id),
       ).rejects.toThrow(InternalServerErrorException);
+      await expect(
+        postsService.deletePost({ id: 1 }, mockUser.id),
+      ).rejects.toThrow('Failed to delete post');
     });
   });
 });

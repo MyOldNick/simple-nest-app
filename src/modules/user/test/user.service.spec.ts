@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthDto } from '@/modules/auth/dto/auth-dto';
 import { plainToInstance } from 'class-transformer';
+import { PaginationDto } from '@/core/dto/pagination.dto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -43,6 +44,11 @@ describe('UserService', () => {
     password: 'hashedpassword',
   };
 
+  const mockPaginationDto: PaginationDto = {
+    limit: 10,
+    offset: 0,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,7 +58,7 @@ describe('UserService', () => {
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
-            find: jest.fn(),
+            findAndCount: jest.fn(),
             findOne: jest.fn(),
           },
         },
@@ -96,30 +102,34 @@ describe('UserService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all users', async () => {
-      userRepository.find.mockResolvedValue([mockUser]);
+    it('should return all users with pagination', async () => {
+      userRepository.findAndCount.mockResolvedValue([[mockUser], 1]);
 
-      const result = await userService.findAll();
+      const result = await userService.findAll(mockPaginationDto);
 
-      expect(userRepository.find).toHaveBeenCalledWith({
+      expect(userRepository.findAndCount).toHaveBeenCalledWith({
         select: ['email', 'firstname', 'id', 'lastname'],
+        skip: mockPaginationDto.offset,
+        take: mockPaginationDto.limit,
       });
       expect(result).toEqual([getUserDto]);
     });
 
     it('should return empty array if no users', async () => {
-      userRepository.find.mockResolvedValue([]);
-      const result = await userService.findAll();
+      userRepository.findAndCount.mockResolvedValue([[], 0]);
+      const result = await userService.findAll(mockPaginationDto);
       expect(result).toEqual([]);
     });
 
     it('should throw InternalServerErrorException with correct message', async () => {
-      userRepository.find.mockRejectedValue(new Error('Failed get users'));
+      userRepository.findAndCount.mockRejectedValue(
+        new Error('Failed get users'),
+      );
 
-      await expect(userService.findAll()).rejects.toThrow(
+      await expect(userService.findAll(mockPaginationDto)).rejects.toThrow(
         InternalServerErrorException,
       );
-      await expect(userService.findAll()).rejects.toThrow(
+      await expect(userService.findAll(mockPaginationDto)).rejects.toThrow(
         'Failed to get users',
       );
     });
