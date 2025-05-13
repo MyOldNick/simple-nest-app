@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -29,6 +30,14 @@ export class Post {
   })
   @Column({ type: 'varchar' })
   content: string;
+
+  @ApiProperty({
+    title: 'Created at',
+    description: 'Post created at',
+    example: '2021-01-01',
+  })
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.posts)
   @JoinColumn()

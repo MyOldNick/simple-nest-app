@@ -13,6 +13,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PaginationDto } from '@/core/dto/pagination.dto';
+import { GetPostDto } from '../dto/get-post.dto';
 
 describe('PostsService', () => {
   let postsService: PostsService;
@@ -38,20 +39,14 @@ describe('PostsService', () => {
     title: 'Test Post',
     content: 'This is a test post',
     author: mockUser,
+    createdAt: new Date(),
   };
 
-  const createPostDto = plainToInstance(CreatePostDto, mockPost, {
-    excludeExtraneousValues: true,
-  });
-
-  const createdPostDto = {
-    ...createPostDto,
-    author: mockUser,
-  };
-
-  const expectedPostDto = {
-    ...mockPost,
-    author: getUserDto,
+  const createPostDto: CreatePostDto = {
+    title: 'Test Post',
+    content: 'This is a test post',
+    author: 1,
+    createdAt: new Date(),
   };
 
   const mockPaginationDto: PaginationDto = {
@@ -76,11 +71,7 @@ describe('PostsService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: {
-            create: jest.fn(),
-            save: jest.fn(),
-            find: jest.fn(),
             findOne: jest.fn(),
-            delete: jest.fn(),
           },
         },
       ],
@@ -94,7 +85,6 @@ describe('PostsService', () => {
       getRepositoryToken(User),
     ) as jest.Mocked<Repository<User>>;
 
-    // Reset all mocks before each test
     jest.clearAllMocks();
   });
 
@@ -104,21 +94,29 @@ describe('PostsService', () => {
 
   describe('createPost', () => {
     it('should create a post successfully', async () => {
+      userRepository.findOne.mockResolvedValue(mockUser);
       postRepository.create.mockReturnValue(mockPost);
       postRepository.save.mockResolvedValue(mockPost);
-      userRepository.findOne.mockResolvedValue(mockUser);
 
       const result = await postsService.createPost(createPostDto);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { id: createPostDto.author },
       });
-      expect(postRepository.create).toHaveBeenCalledWith(createdPostDto);
+      expect(postRepository.create).toHaveBeenCalledWith({
+        title: createPostDto.title,
+        content: createPostDto.content,
+        author: mockUser,
+      });
       expect(postRepository.save).toHaveBeenCalledWith(mockPost);
-      expect(result).toEqual(expectedPostDto);
+      expect(result).toEqual(
+        plainToInstance(GetPostDto, mockPost, {
+          excludeExtraneousValues: true,
+        }),
+      );
     });
 
-    it('should throw NotFoundException when user is not found', async () => {
+    it('should throw NotFoundException with correct message when user not found', async () => {
       userRepository.findOne.mockResolvedValue(null);
 
       await expect(postsService.createPost(createPostDto)).rejects.toThrow(
@@ -130,10 +128,13 @@ describe('PostsService', () => {
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { id: createPostDto.author },
       });
+      expect(postRepository.create).not.toHaveBeenCalled();
+      expect(postRepository.save).not.toHaveBeenCalled();
     });
 
-    it('should throw InternalServerErrorException when post creation fails', async () => {
+    it('should throw InternalServerErrorException with correct message when post creation fails', async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
+      postRepository.create.mockReturnValue(mockPost);
       postRepository.save.mockRejectedValue(new Error('Database error'));
 
       await expect(postsService.createPost(createPostDto)).rejects.toThrow(
@@ -142,11 +143,20 @@ describe('PostsService', () => {
       await expect(postsService.createPost(createPostDto)).rejects.toThrow(
         'Failed to create post',
       );
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: createPostDto.author },
+      });
+      expect(postRepository.create).toHaveBeenCalledWith({
+        title: createPostDto.title,
+        content: createPostDto.content,
+        author: mockUser,
+      });
+      expect(postRepository.save).toHaveBeenCalledWith(mockPost);
     });
   });
 
   describe('getAllPosts', () => {
-    it('should return all posts successfully', async () => {
+    it('should return all posts successfully with proper ordering', async () => {
       postRepository.findAndCount.mockResolvedValue([[mockPost], 1]);
 
       const result = await postsService.getAllPosts(mockPaginationDto);
@@ -155,8 +165,15 @@ describe('PostsService', () => {
         relations: ['author'],
         skip: mockPaginationDto.offset,
         take: mockPaginationDto.limit,
+        order: {
+          createdAt: 'DESC',
+        },
       });
-      expect(result).toEqual([expectedPostDto]);
+      expect(result).toEqual([
+        plainToInstance(GetPostDto, mockPost, {
+          excludeExtraneousValues: true,
+        }),
+      ]);
     });
 
     it('should return empty array when no posts exist', async () => {
@@ -168,11 +185,14 @@ describe('PostsService', () => {
         relations: ['author'],
         skip: mockPaginationDto.offset,
         take: mockPaginationDto.limit,
+        order: {
+          createdAt: 'DESC',
+        },
       });
       expect(result).toEqual([]);
     });
 
-    it('should throw InternalServerErrorException when fetching posts fails', async () => {
+    it('should throw InternalServerErrorException with correct message when fetching posts fails', async () => {
       postRepository.findAndCount.mockRejectedValue(
         new Error('Database error'),
       );
@@ -187,12 +207,15 @@ describe('PostsService', () => {
         relations: ['author'],
         skip: mockPaginationDto.offset,
         take: mockPaginationDto.limit,
+        order: {
+          createdAt: 'DESC',
+        },
       });
     });
   });
 
   describe('deletePost', () => {
-    it('should delete a post when user is the author', async () => {
+    it('should delete a post successfully when user is the author', async () => {
       postRepository.findOne.mockResolvedValue(mockPost);
       postRepository.delete.mockResolvedValue({ affected: 1, raw: [] });
 
@@ -206,7 +229,7 @@ describe('PostsService', () => {
       expect(result).toBe('Post deleted successfully');
     });
 
-    it('should throw NotFoundException when post is not found', async () => {
+    it('should throw NotFoundException with correct message when post not found', async () => {
       postRepository.findOne.mockResolvedValue(null);
 
       await expect(
@@ -219,9 +242,10 @@ describe('PostsService', () => {
         where: { id: 999 },
         relations: ['author'],
       });
+      expect(postRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('should throw ForbiddenException when user is not the author', async () => {
+    it('should throw ForbiddenException with correct message when user is not the author', async () => {
       postRepository.findOne.mockResolvedValue(mockPost);
 
       await expect(postsService.deletePost({ id: 1 }, 999)).rejects.toThrow(
@@ -234,9 +258,10 @@ describe('PostsService', () => {
         where: { id: 1 },
         relations: ['author'],
       });
+      expect(postRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('should throw InternalServerErrorException when deletion fails', async () => {
+    it('should throw InternalServerErrorException with correct message when deletion fails', async () => {
       postRepository.findOne.mockResolvedValue(mockPost);
       postRepository.delete.mockRejectedValue(new Error('Database error'));
 
@@ -246,6 +271,11 @@ describe('PostsService', () => {
       await expect(
         postsService.deletePost({ id: 1 }, mockUser.id),
       ).rejects.toThrow('Failed to delete post');
+      expect(postRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: ['author'],
+      });
+      expect(postRepository.delete).toHaveBeenCalledWith({ id: 1 });
     });
   });
 });

@@ -27,6 +27,9 @@ export class PostsService {
         relations: ['author'],
         skip: offset,
         take: limit,
+        order: {
+          createdAt: 'DESC',
+        },
       });
       return plainToInstance(GetPostDto, posts, {
         excludeExtraneousValues: true,

@@ -10,6 +10,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PaginationDto } from '@/core/dto/pagination.dto';
+import { ExecutionContext } from '@nestjs/common';
 
 describe('PostsController', () => {
   let postsController: PostsController;
@@ -25,12 +26,14 @@ describe('PostsController', () => {
       lastname: 'Doe',
       email: 'test@gmail.com',
     },
+    createdAt: new Date(),
   };
 
   const createPostDto: CreatePostDto = {
     title: 'Test Post',
     content: 'This is a test post',
     author: 1,
+    createdAt: new Date(),
   };
 
   const mockPaginationDto: PaginationDto = {
@@ -58,7 +61,7 @@ describe('PostsController', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({
-        canActivate: () => true,
+        canActivate: (context: ExecutionContext) => true,
       })
       .compile();
 
@@ -90,7 +93,7 @@ describe('PostsController', () => {
       expect(result).toEqual([]);
     });
 
-    it('should throw InternalServerErrorException when service fails', async () => {
+    it('should throw InternalServerErrorException with correct message when fetching posts fails', async () => {
       jest
         .spyOn(postsService, 'getAllPosts')
         .mockRejectedValue(
@@ -123,7 +126,7 @@ describe('PostsController', () => {
       expect(result).toEqual(mockPost);
     });
 
-    it('should throw NotFoundException when user not found', async () => {
+    it('should throw NotFoundException with correct message when user not found', async () => {
       jest
         .spyOn(postsService, 'createPost')
         .mockRejectedValue(new NotFoundException('User not found'));
@@ -140,7 +143,7 @@ describe('PostsController', () => {
       });
     });
 
-    it('should throw InternalServerErrorException when creation fails', async () => {
+    it('should throw InternalServerErrorException with correct message when creation fails', async () => {
       jest
         .spyOn(postsService, 'createPost')
         .mockRejectedValue(
@@ -179,7 +182,7 @@ describe('PostsController', () => {
       expect(result).toBe(successMessage);
     });
 
-    it('should throw NotFoundException when post not found', async () => {
+    it('should throw NotFoundException with correct message when post not found', async () => {
       jest
         .spyOn(postsService, 'deletePost')
         .mockRejectedValue(new NotFoundException('Post not found'));
@@ -196,7 +199,7 @@ describe('PostsController', () => {
       );
     });
 
-    it('should throw ForbiddenException when user is not the author', async () => {
+    it('should throw ForbiddenException with correct message when user is not the author', async () => {
       jest
         .spyOn(postsService, 'deletePost')
         .mockRejectedValue(
@@ -215,7 +218,7 @@ describe('PostsController', () => {
       );
     });
 
-    it('should throw InternalServerErrorException when deletion fails', async () => {
+    it('should throw InternalServerErrorException with correct message when deletion fails', async () => {
       jest
         .spyOn(postsService, 'deletePost')
         .mockRejectedValue(

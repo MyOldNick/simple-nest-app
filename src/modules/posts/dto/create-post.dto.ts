@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { BeforeInsert } from 'typeorm';
 
 export class CreatePostDto {
   @ApiProperty({
@@ -31,4 +32,13 @@ export class CreatePostDto {
   @IsNumber()
   @Expose()
   author?: number;
+
+  @ApiProperty({
+    title: 'Created at',
+    description: 'Post created at',
+    example: '2021-01-01',
+  })
+  @IsDate()
+  @Expose()
+  createdAt: Date;
 }
