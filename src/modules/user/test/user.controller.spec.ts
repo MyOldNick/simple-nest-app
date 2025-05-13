@@ -6,7 +6,12 @@ import { plainToInstance } from 'class-transformer';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { GetUserDto } from '../dto/get-user.dto';
 import { PaginationDto } from '@/core/dto/pagination.dto';
-import { InternalServerErrorException } from '@nestjs/common';
+import {
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '@/core/guards/auth.guard';
+import { ExecutionContext } from '@nestjs/common';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -55,7 +60,12 @@ describe('UserController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({
+        canActivate: () => true,
+      })
+      .compile();
 
     userController = module.get<UserController>(UserController);
     userService = module.get<UserService>(UserService);
@@ -76,13 +86,16 @@ describe('UserController', () => {
       expect(result).toEqual(getUserDto);
     });
 
-    it('should throw error when user creation fails', async () => {
+    it('should throw InternalServerErrorException when user creation fails', async () => {
       (userService.create as jest.Mock).mockRejectedValue(
         new InternalServerErrorException('Failed to create user'),
       );
 
       await expect(userController.create(createUserDto)).rejects.toThrow(
         InternalServerErrorException,
+      );
+      await expect(userController.create(createUserDto)).rejects.toThrow(
+        'Failed to create user',
       );
       expect(userService.create).toHaveBeenCalledWith(createUserDto);
     });
@@ -107,7 +120,7 @@ describe('UserController', () => {
       expect(result).toEqual([]);
     });
 
-    it('should throw error when fetching users fails', async () => {
+    it('should throw InternalServerErrorException when fetching users fails', async () => {
       (userService.findAll as jest.Mock).mockRejectedValue(
         new InternalServerErrorException('Failed to get users'),
       );
@@ -115,19 +128,49 @@ describe('UserController', () => {
       await expect(userController.findAll(mockPaginationDto)).rejects.toThrow(
         InternalServerErrorException,
       );
+      await expect(userController.findAll(mockPaginationDto)).rejects.toThrow(
+        'Failed to get users',
+      );
       expect(userService.findAll).toHaveBeenCalledWith(mockPaginationDto);
     });
   });
 
   describe('findOne', () => {
-    it('should return a user by id', async () => {
-      const expectedResult = `This action returns a #${mockUser.id} user`;
-      (userService.findOne as jest.Mock).mockResolvedValue(expectedResult);
+    it('should return a user by id successfully', async () => {
+      (userService.findOne as jest.Mock).mockResolvedValue(getUserDto);
 
       const result = await userController.findOne(mockUser.id.toString());
 
       expect(userService.findOne).toHaveBeenCalledWith(mockUser.id);
-      expect(result).toBe(expectedResult);
+      expect(result).toEqual(getUserDto);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      (userService.findOne as jest.Mock).mockRejectedValue(
+        new NotFoundException('User not found'),
+      );
+
+      await expect(userController.findOne('999')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(userController.findOne('999')).rejects.toThrow(
+        'User not found',
+      );
+      expect(userService.findOne).toHaveBeenCalledWith(999);
+    });
+
+    it('should throw InternalServerErrorException when fetching user fails', async () => {
+      (userService.findOne as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException('Failed to get user'),
+      );
+
+      await expect(
+        userController.findOne(mockUser.id.toString()),
+      ).rejects.toThrow(InternalServerErrorException);
+      await expect(
+        userController.findOne(mockUser.id.toString()),
+      ).rejects.toThrow('Failed to get user');
+      expect(userService.findOne).toHaveBeenCalledWith(mockUser.id);
     });
   });
 
@@ -141,6 +184,20 @@ describe('UserController', () => {
       expect(userService.update).toHaveBeenCalledWith(mockUser.id);
       expect(result).toBe(expectedResult);
     });
+
+    it('should throw InternalServerErrorException when update fails', async () => {
+      (userService.update as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException('Failed to update user'),
+      );
+
+      await expect(
+        userController.update(mockUser.id.toString()),
+      ).rejects.toThrow(InternalServerErrorException);
+      await expect(
+        userController.update(mockUser.id.toString()),
+      ).rejects.toThrow('Failed to update user');
+      expect(userService.update).toHaveBeenCalledWith(mockUser.id);
+    });
   });
 
   describe('remove', () => {
@@ -152,6 +209,20 @@ describe('UserController', () => {
 
       expect(userService.remove).toHaveBeenCalledWith(mockUser.id);
       expect(result).toBe(expectedResult);
+    });
+
+    it('should throw InternalServerErrorException when removal fails', async () => {
+      (userService.remove as jest.Mock).mockRejectedValue(
+        new InternalServerErrorException('Failed to remove user'),
+      );
+
+      await expect(
+        userController.remove(mockUser.id.toString()),
+      ).rejects.toThrow(InternalServerErrorException);
+      await expect(
+        userController.remove(mockUser.id.toString()),
+      ).rejects.toThrow('Failed to remove user');
+      expect(userService.remove).toHaveBeenCalledWith(mockUser.id);
     });
   });
 });

@@ -39,7 +39,7 @@ export class PostsController {
     description: 'Successful create post',
     type: GetPostDto,
   })
-  @ApiResponse({ status: 404, description: 'Invalid data' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -49,6 +49,8 @@ export class PostsController {
 
   @ApiOperation({ summary: 'Delete post' })
   @ApiResponse({ status: 200, description: 'Post deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   @UseGuards(JwtAuthGuard)
   @Delete()
   async deletePost(@Body() data: DeletePostDto, @Req() req): Promise<string> {

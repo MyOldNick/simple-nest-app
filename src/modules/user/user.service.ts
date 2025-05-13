@@ -1,6 +1,7 @@
 import {
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -67,8 +68,18 @@ export class UserService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) throw new NotFoundException('User not found');
+      return plainToInstance(GetUserDto, user, {
+        excludeExtraneousValues: true,
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      console.error('Failed to get user', error);
+      throw new InternalServerErrorException('Failed to get user');
+    }
   }
 
   update(id: number) {

@@ -26,7 +26,7 @@ export class UserController {
     description: 'Successful create user',
     type: GetUserDto,
   })
-  @ApiResponse({ status: 404, description: 'Invalid data' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   @Post()
   create(@Body() user: CreateUserDto): Promise<GetUserDto> {
     return this.userService.create(user);
@@ -45,6 +45,15 @@ export class UserController {
     return this.userService.findAll(pagination);
   }
 
+  @ApiOperation({ summary: 'Get user by id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successful get user',
+    type: GetUserDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(+id);
