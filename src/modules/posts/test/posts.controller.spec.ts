@@ -33,7 +33,6 @@ describe('PostsController', () => {
     title: 'Test Post',
     content: 'This is a test post',
     author: 1,
-    createdAt: new Date(),
   };
 
   const mockPaginationDto: PaginationDto = {

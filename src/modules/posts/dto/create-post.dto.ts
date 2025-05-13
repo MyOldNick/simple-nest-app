@@ -32,13 +32,4 @@ export class CreatePostDto {
   @IsNumber()
   @Expose()
   author?: number;
-
-  @ApiProperty({
-    title: 'Created at',
-    description: 'Post created at',
-    example: '2021-01-01',
-  })
-  @IsDate()
-  @Expose()
-  createdAt: Date;
 }
