@@ -63,6 +63,7 @@ describe('UserService', () => {
     userRepository = module.get<Repository<User>>(
       getRepositoryToken(User),
     ) as jest.Mocked<Repository<User>>;
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -81,17 +82,20 @@ describe('UserService', () => {
       expect(result).toEqual(getUserDto);
     });
 
-    it('should throw an error', async () => {
+    it('should throw InternalServerErrorException with correct message', async () => {
       userRepository.create.mockReturnValue(mockUser);
       userRepository.save.mockRejectedValue(new Error('Error saving user'));
 
       await expect(userService.create(createUserDto)).rejects.toThrow(
         InternalServerErrorException,
       );
+      await expect(userService.create(createUserDto)).rejects.toThrow(
+        'Failed to create user',
+      );
     });
   });
 
-  describe('Find all users', () => {
+  describe('findAll', () => {
     it('should return all users', async () => {
       userRepository.find.mockResolvedValue([mockUser]);
 
@@ -100,15 +104,23 @@ describe('UserService', () => {
       expect(userRepository.find).toHaveBeenCalledWith({
         select: ['email', 'firstname', 'id', 'lastname'],
       });
-
       expect(result).toEqual([getUserDto]);
     });
 
-    it('should throw an error', async () => {
+    it('should return empty array if no users', async () => {
+      userRepository.find.mockResolvedValue([]);
+      const result = await userService.findAll();
+      expect(result).toEqual([]);
+    });
+
+    it('should throw InternalServerErrorException with correct message', async () => {
       userRepository.find.mockRejectedValue(new Error('Failed get users'));
 
       await expect(userService.findAll()).rejects.toThrow(
         InternalServerErrorException,
+      );
+      await expect(userService.findAll()).rejects.toThrow(
+        'Failed to get users',
       );
     });
   });
@@ -116,7 +128,6 @@ describe('UserService', () => {
   describe('validateUser', () => {
     it('should validate user', async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
-
       jest
         .spyOn(require('@/utils/hash-password.util'), 'comparePassword')
         .mockResolvedValue(true);
@@ -126,39 +137,39 @@ describe('UserService', () => {
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: authDto.email },
       });
-
       const expectedUser = plainToInstance(GetUserDto, mockUser, {
         excludeExtraneousValues: true,
       });
-
       expect(result).toEqual(expectedUser);
     });
 
-    it('should throw an error if user not found', async () => {
+    it('should throw UnauthorizedException with correct message if user not found', async () => {
       userRepository.findOne.mockResolvedValue(null);
-
       await expect(userService.validateUser(authDto)).rejects.toThrow(
-        InternalServerErrorException,
+        UnauthorizedException,
+      );
+      await expect(userService.validateUser(authDto)).rejects.toThrow(
+        'Invalid credentials',
       );
     });
 
-    it("should throw an error if password doesn't match", async () => {
+    it("should throw UnauthorizedException if password doesn't match", async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
-
       jest
         .spyOn(require('@/utils/hash-password.util'), 'comparePassword')
         .mockResolvedValue(false);
-
       await expect(userService.validateUser(authDto)).rejects.toThrow(
-        InternalServerErrorException,
+        UnauthorizedException,
       );
     });
 
-    it('should throw an error if database error', () => {
+    it('should throw InternalServerErrorException if database error', async () => {
       userRepository.findOne.mockRejectedValue(new Error('Database error'));
-
-      expect(userService.validateUser(authDto)).rejects.toThrow(
+      await expect(userService.validateUser(authDto)).rejects.toThrow(
         InternalServerErrorException,
+      );
+      await expect(userService.validateUser(authDto)).rejects.toThrow(
+        'Failed user validation',
       );
     });
   });

@@ -58,6 +58,7 @@ export class UserService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       console.error('Failed user validation', error);
       throw new InternalServerErrorException('Failed user validation');
     }

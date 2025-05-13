@@ -41,6 +41,9 @@ export class PostsService {
       const foundUser = await this.userRepository.findOne({
         where: { id: author },
       });
+      if (!foundUser) {
+        throw new NotFoundException('User not found');
+      }
       const newPost = await this.postRepository.create({
         content,
         title,
@@ -51,6 +54,9 @@ export class PostsService {
         excludeExtraneousValues: true,
       });
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       console.error('Failed to create post', error);
       throw new InternalServerErrorException('Failed to create post');
     }
