@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { hashPassword } from '@/utils/hash-password.util';
 import {
   BeforeInsert,
@@ -51,27 +51,12 @@ export class User {
   @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @ApiProperty({
-    title: 'Followers',
-    description: 'user followers',
-    example: '1',
-  })
-  @OneToMany(() => Follows, (follow) => follow.following)
+  @OneToMany(() => Follows, (follow: Follows) => follow.following)
   followers?: Array<Follows>;
 
-  @ApiProperty({
-    title: 'Following',
-    description: 'user following',
-    example: '1',
-  })
-  @OneToMany(() => Follows, (follow) => follow.follower)
+  @OneToMany(() => Follows, (follow: Follows) => follow.follower)
   following?: Array<Follows>;
 
-  @ApiProperty({
-    title: 'Posts',
-    description: "user's posts",
-    example: "['post1', 'post2']",
-  })
   @OneToMany(() => Post, (post) => post.author)
   @JoinColumn()
   posts?: Array<Post>;

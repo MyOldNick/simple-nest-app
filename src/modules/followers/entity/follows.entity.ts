@@ -13,20 +13,14 @@ export class Follows {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({
-    title: 'Follower',
-    description: 'follower user',
-    example: '1',
+  @ManyToOne(() => User, (user: User) => user.following, {
+    onDelete: 'CASCADE',
   })
-  @ManyToOne(() => User, (user) => user.following, { onDelete: 'CASCADE' })
   follower: User;
 
-  @ApiProperty({
-    title: 'Following',
-    description: 'following user',
-    example: '1',
+  @ManyToOne(() => User, (user: User) => user.followers, {
+    onDelete: 'CASCADE',
   })
-  @ManyToOne(() => User, (user) => user.followers, { onDelete: 'CASCADE' })
   following: User;
 
   @ApiProperty({

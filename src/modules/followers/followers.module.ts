@@ -6,9 +6,10 @@ import { FollowersService } from './followers.service';
 import { FollowersController } from './followers.controller';
 import { Follows } from './entity/follows.entity';
 import { ConfigModule } from '@nestjs/config';
+import { User } from '../user/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Follows]), JwtModule, ConfigModule],
+  imports: [TypeOrmModule.forFeature([Follows, User]), JwtModule, ConfigModule],
   controllers: [FollowersController],
   providers: [FollowersService, JwtStrategy],
   exports: [],
