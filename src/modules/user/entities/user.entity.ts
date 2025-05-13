@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Post } from '@/modules/posts/entities/post.entity';
 import { Exclude } from 'class-transformer';
+import { Follows } from '@/modules/followers/entity/follows.entity';
 
 @Entity()
 export class User {
@@ -49,6 +50,22 @@ export class User {
   })
   @Column({ type: 'varchar', unique: true })
   email: string;
+
+  @ApiProperty({
+    title: 'Followers',
+    description: 'user followers',
+    example: '1',
+  })
+  @OneToMany(() => Follows, (follow) => follow.following)
+  followers?: Array<Follows>;
+
+  @ApiProperty({
+    title: 'Following',
+    description: 'user following',
+    example: '1',
+  })
+  @OneToMany(() => Follows, (follow) => follow.follower)
+  following?: Array<Follows>;
 
   @ApiProperty({
     title: 'Posts',

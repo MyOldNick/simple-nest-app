@@ -8,7 +8,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Simple NestJS application')
-    .setDescription('Its will be something like social network')
+    .setDescription('It will be something like social network')
     .setVersion('1.0')
     .build();
 

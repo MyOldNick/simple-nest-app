@@ -9,9 +9,10 @@ import { PaginationDto } from '@/core/dto/pagination.dto';
 import {
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/core/guards/auth.guard';
-import { ExecutionContext } from '@nestjs/common';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -120,6 +121,30 @@ describe('UserController', () => {
       expect(result).toEqual([]);
     });
 
+    it('should throw UnauthorizedException when JWT guard fails', async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [UserController],
+        providers: [
+          {
+            provide: UserService,
+            useValue: {
+              findAll: jest.fn().mockRejectedValue(new UnauthorizedException()),
+            },
+          },
+        ],
+      })
+        .overrideGuard(JwtAuthGuard)
+        .useValue({
+          canActivate: () => false,
+        })
+        .compile();
+
+      const controller = module.get<UserController>(UserController);
+      await expect(controller.findAll(mockPaginationDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
     it('should throw InternalServerErrorException when fetching users fails', async () => {
       (userService.findAll as jest.Mock).mockRejectedValue(
         new InternalServerErrorException('Failed to get users'),
@@ -159,6 +184,30 @@ describe('UserController', () => {
       expect(userService.findOne).toHaveBeenCalledWith(999);
     });
 
+    it('should throw UnauthorizedException when JWT guard fails', async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [UserController],
+        providers: [
+          {
+            provide: UserService,
+            useValue: {
+              findOne: jest.fn().mockRejectedValue(new UnauthorizedException()),
+            },
+          },
+        ],
+      })
+        .overrideGuard(JwtAuthGuard)
+        .useValue({
+          canActivate: () => false,
+        })
+        .compile();
+
+      const controller = module.get<UserController>(UserController);
+      await expect(controller.findOne('1')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
     it('should throw InternalServerErrorException when fetching user fails', async () => {
       (userService.findOne as jest.Mock).mockRejectedValue(
         new InternalServerErrorException('Failed to get user'),
@@ -185,6 +234,16 @@ describe('UserController', () => {
       expect(result).toBe(expectedResult);
     });
 
+    it('should throw NotFoundException when user not found', async () => {
+      (userService.update as jest.Mock).mockRejectedValue(
+        new NotFoundException('User not found'),
+      );
+
+      await expect(userController.update('999')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
     it('should throw InternalServerErrorException when update fails', async () => {
       (userService.update as jest.Mock).mockRejectedValue(
         new InternalServerErrorException('Failed to update user'),
@@ -209,6 +268,16 @@ describe('UserController', () => {
 
       expect(userService.remove).toHaveBeenCalledWith(mockUser.id);
       expect(result).toBe(expectedResult);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      (userService.remove as jest.Mock).mockRejectedValue(
+        new NotFoundException('User not found'),
+      );
+
+      await expect(userController.remove('999')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw InternalServerErrorException when removal fails', async () => {

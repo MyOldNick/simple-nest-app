@@ -4,6 +4,7 @@ import { PostgreModule } from './core/database/postgre.module';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PostsModule } from './modules/posts/posts.module';
+import { FollowersModule } from './modules/followers/followers.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PostsModule } from './modules/posts/posts.module';
     UserModule,
     AuthModule,
     PostsModule,
+    FollowersModule,
   ],
   controllers: [],
   providers: [],
