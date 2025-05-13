@@ -58,9 +58,13 @@ describe('AuthService', () => {
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
-    userService = module.get<UserService>(UserService) as jest.Mocked<UserService>;
+    userService = module.get<UserService>(
+      UserService,
+    ) as jest.Mocked<UserService>;
     jwtService = module.get<JwtService>(JwtService) as jest.Mocked<JwtService>;
-    configService = module.get<ConfigService>(ConfigService) as jest.Mocked<ConfigService>;
+    configService = module.get<ConfigService>(
+      ConfigService,
+    ) as jest.Mocked<ConfigService>;
 
     // Reset all mocks before each test
     jest.clearAllMocks();
@@ -86,12 +90,16 @@ describe('AuthService', () => {
         email: mockUser.email,
         sub: mockUser.id,
       });
-      expect(jwtService.signAsync).toHaveBeenNthCalledWith(2, {
-        email: mockUser.email,
-        sub: mockUser.id,
-      }, {
-        expiresIn: '7d',
-      });
+      expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+        2,
+        {
+          email: mockUser.email,
+          sub: mockUser.id,
+        },
+        {
+          expiresIn: '7d',
+        },
+      );
       expect(result).toEqual({
         access_token: mockAccessToken,
         refresh_token: mockRefreshToken,
@@ -118,7 +126,9 @@ describe('AuthService', () => {
 
     it('should throw InternalServerErrorException if token generation fails', async () => {
       userService.validateUser.mockResolvedValue(mockUser);
-      jwtService.signAsync.mockRejectedValue(new Error('Token generation failed'));
+      jwtService.signAsync.mockRejectedValue(
+        new Error('Token generation failed'),
+      );
 
       await expect(authService.login(mockAuthDto)).rejects.toThrow(
         InternalServerErrorException,
@@ -155,7 +165,9 @@ describe('AuthService', () => {
 
     it('should throw InternalServerErrorException if new token generation fails', async () => {
       jwtService.verifyAsync.mockResolvedValue(mockPayload);
-      jwtService.signAsync.mockRejectedValue(new Error('Token generation failed'));
+      jwtService.signAsync.mockRejectedValue(
+        new Error('Token generation failed'),
+      );
 
       await expect(authService.refresh(mockRefreshToken)).rejects.toThrow(
         InternalServerErrorException,

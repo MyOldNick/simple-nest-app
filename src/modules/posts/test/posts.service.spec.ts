@@ -7,7 +7,11 @@ import { User } from '@/modules/user/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { GetUserDto } from '@/modules/user/dto/get-user.dto';
 import { CreatePostDto } from '../dto/create-post.dto';
-import { NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 describe('PostsService', () => {
   let postsService: PostsService;

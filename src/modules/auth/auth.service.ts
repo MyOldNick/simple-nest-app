@@ -31,7 +31,11 @@ export class AuthService {
         }),
       };
     } catch (error) {
-      if (error instanceof HttpException || error instanceof UnauthorizedException) throw error;
+      if (
+        error instanceof HttpException ||
+        error instanceof UnauthorizedException
+      )
+        throw error;
       console.error(error);
       throw new InternalServerErrorException('Login failed');
     }
